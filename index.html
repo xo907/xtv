@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#060607">
+  <title>XTV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Google+Sans:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" data-mode="splash">
+
+  <!-- Video surface (shrinks into the guide's preview window) -->
+  <div id="screen">
+    <video id="video" playsinline></video>
+    <canvas id="static" width="192" height="108"></canvas>
+    <div id="signal">
+      <div class="signal-box">
+        <div class="signal-title"></div>
+        <div class="signal-sub"></div>
+      </div>
+    </div>
+    <div id="buffering"><div class="spinner"></div></div>
+    <div id="dvrwait" aria-live="polite">
+      <div class="dw-box">
+        <b>Building your head start</b>
+        <p>Recording this channel so ad breaks can be skipped. You'll watch a few minutes behind live.</p>
+        <div class="dw-bar"><i></i></div>
+        <span class="dw-left"></span>
+        <div class="dw-acts">
+          <button type="button" class="btn primary" data-dw="now">Start now</button>
+          <button type="button" class="btn ghost" data-dw="live">Watch live instead</button>
+        </div>
+      </div>
+    </div>
+    <div id="adbreak" aria-live="polite">
+      <div class="ad-box">
+        <b>Ad break</b>
+        <span class="ad-left">Back in a moment</span>
+        <button type="button" class="ad-show">Show ad</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sign in / create account -->
+  <section id="auth" aria-label="Sign in">
+    <form class="a-card" autocomplete="on">
+      <div class="a-logo"><span class="brand-name">XTV</span></div>
+      <h2 class="a-title">Sign in</h2>
+      <p class="a-note"></p>
+      <label>Username<input name="name" autocomplete="username" required minlength="3" maxlength="32" spellcheck="false"></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+      <p class="a-err" role="alert"></p>
+      <button class="btn primary" type="submit">Sign in</button>
+      <p class="a-switch"></p>
+    </form>
+  </section>
+
+  <!-- Power-on splash -->
+  <div id="splash">
+    <div class="splash-logo"><span class="brand-name">XTV</span></div>
+    <div class="splash-sub">Press any key or click to turn on</div>
+  </div>
+
+  <div id="numentry"></div>
+  <div id="ctx" role="menu"></div>
+  <div id="toast"></div>
+
+  <!-- Channel info banner -->
+  <div id="banner">
+    <div class="b-chan">
+      <div class="b-num"></div>
+      <div class="b-logo"></div>
+    </div>
+    <div class="b-main">
+      <div class="b-top">
+        <span class="b-name"></span>
+        <span class="b-call"></span>
+        <span class="badge live">LIVE</span>
+        <span class="b-fav" title="Favorite">★</span>
+      </div>
+      <div class="b-title"></div>
+      <div class="b-time">
+        <span class="b-range"></span>
+        <div class="progress"><i></i></div>
+        <span class="b-left"></span>
+      </div>
+      <div class="b-desc"></div>
+    </div>
+    <div class="b-side">
+      <div class="b-clock"></div>
+      <div class="b-next"><small>UP NEXT</small><span></span></div>
+    </div>
+  </div>
+
+  <!-- Program guide -->
+  <section id="guide" aria-label="Program guide">
+    <header class="g-head">
+      <div class="g-info">
+        <div class="g-brand"><span class="brand-name">XTV</span><span class="g-label">Guide</span><span class="g-clock"></span></div>
+        <div class="g-sel-chan"></div>
+        <h2 class="g-sel-title"></h2>
+        <div class="g-sel-time"></div>
+        <p class="g-sel-desc"></p>
+      </div>
+    </header>
+    <div class="g-bar">
+      <input class="search g-search" type="search" placeholder="Search channels" aria-label="Search channels" autocomplete="off" spellcheck="false">
+      <nav class="filters g-filters"></nav>
+      <span class="g-actions"><span class="g-div" aria-hidden="true"></span><button class="icon-btn" data-cmd="manage" title="Settings (E)" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></span>
+    </div>
+    <div class="g-grid">
+      <div class="g-ruler">
+        <div class="g-day"></div>
+        <div class="g-times"></div>
+      </div>
+      <div class="g-body">
+        <div class="g-rows"></div>
+        <div class="g-nowline"><span>NOW</span></div>
+      </div>
+    </div>
+    <footer class="hints">
+      <span><kbd>↑</kbd><kbd>↓</kbd> Channel</span>
+      <span><kbd>←</kbd><kbd>→</kbd> Time</span>
+      <span><kbd>Enter</kbd> Watch</span>
+      <span><kbd>/</kbd> Search</span>
+      <span><kbd>Esc</kbd> Back</span>
+    </footer>
+  </section>
+
+  <!-- Quick channel list -->
+  <aside id="list" aria-label="Channel list">
+    <div class="l-head"><span>Channels</span><span class="l-count"></span>
+      <span class="l-actions"><button class="icon-btn" data-cmd="manage" title="Settings (E)" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button></span>
+    </div>
+    <input class="search l-search" type="search" placeholder="Search channels" aria-label="Search channels" autocomplete="off" spellcheck="false">
+    <nav class="filters l-filters"></nav>
+    <ul class="l-items"></ul>
+    <footer class="hints">
+      <span><kbd>↑</kbd><kbd>↓</kbd> Channel</span>
+      <span><kbd>Enter</kbd> Watch</span>
+      <span><kbd>/</kbd> Search</span>
+      <span><kbd>Esc</kbd> Back</span>
+    </footer>
+  </aside>
+
+  <!-- Lineup manager -->
+  <section id="manage" aria-label="Lineup">
+    <div class="m-panel">
+      <header class="m-head">
+        <div>
+          <h2>Settings</h2>
+          <div class="m-source"></div>
+        </div>
+        <button class="icon-btn m-close" data-act="close" title="Close (Esc)">✕</button>
+      </header>
+      <nav class="m-tabs">
+        <button data-tab="table" class="admin-only">Lineup</button>
+        <button data-tab="countries" class="admin-only">Countries</button>
+        <button data-tab="status" class="admin-only">Channel status</button>
+        <button data-tab="users" class="admin-only">Users</button>
+        <button data-tab="account">Account</button>
+      </nav>
+
+      <div class="m-view" data-view="table">
+        <div class="m-actions">
+          <button class="btn primary" data-act="add">+ Add channel</button>
+          <button class="btn" data-act="import">Import M3U</button>
+          <span class="m-more">
+            <button class="btn ghost" data-act="export">Export</button>
+            <button class="btn ghost" data-act="reset">Reset</button>
+          </span>
+        </div>
+        <div class="m-scroll">
+          <table class="m-table">
+            <thead><tr><th>#</th><th></th><th>Name</th><th>Group</th><th>Stream</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="m-empty">No channels of your own yet. Add one, import an M3U playlist, or pick countries.</div>
+        </div>
+      </div>
+
+      <form class="m-view m-form" data-view="form" autocomplete="off">
+        <div class="field-row">
+          <label class="f-num">Number<input name="number" type="number" min="1" placeholder="auto"></label>
+          <label>Name<input name="name" required placeholder="My Channel"></label>
+          <label class="f-short">Callsign<input name="callsign" maxlength="8" placeholder="MYCH"></label>
+        </div>
+        <label>Stream URL<input name="url" required placeholder="https://…/live/stream.m3u8"></label>
+        <label>iptv-org channel <small class="iptv-hint"></small><input name="iptvId" list="iptv-hits" placeholder="Search by name, e.g. Disney XD — fills in logo &amp; category"></label>
+        <datalist id="iptv-hits"></datalist>
+        <div class="field-row">
+          <label>Group<input name="group" list="groups" placeholder="Live"></label>
+          <label>Logo URL<input name="logo" placeholder="https://…/logo.png"></label>
+        </div>
+        <datalist id="groups"></datalist>
+        <div class="field-row">
+          <label>Default program title<input name="defaultTitle" placeholder="Live Broadcast"></label>
+          <label>Default description<input name="description" placeholder="Shown when nothing is scheduled"></label>
+        </div>
+        <label>Daily schedule <small>one per line: <code>19:00-21:00 Show title | description</code></small>
+          <textarea name="schedule" rows="5" spellcheck="false" placeholder="06:00-09:00 Morning Session | Live from the studio&#10;19:00-22:00 Prime Time Live"></textarea>
+        </label>
+        <div class="m-actions end">
+          <button type="button" class="btn ghost" data-act="cancel">Cancel</button>
+          <button type="button" class="btn" data-act="test">Test stream</button>
+          <button type="submit" class="btn primary">Save channel</button>
+        </div>
+      </form>
+
+      <div class="m-view m-countries" data-view="countries">
+        <p class="m-note">Add free channels from <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a> for these countries. Each country gets its own number range (the first from 1000, the next from the following thousand, e.g. US 1000+, UK 3000+). Channels you already have are skipped.</p>
+        <input class="c-filter" placeholder="Filter countries…" autocomplete="off">
+        <div class="c-list m-scroll"></div>
+        <div class="m-actions end">
+          <span class="c-sum m-note"></span>
+          <label class="check"><input type="checkbox" class="c-hide" checked> Hide channels that don't work</label>
+          <button type="button" class="btn ghost" data-act="cancel">Cancel</button>
+          <button type="button" class="btn primary" data-act="countries-apply">Apply</button>
+        </div>
+      </div>
+
+      <div class="m-view m-status" data-view="status">
+        <div class="s-sum"></div>
+        <div class="m-actions">
+          <input class="search s-find" type="search" placeholder="Find a channel" autocomplete="off" spellcheck="false">
+          <select class="s-filter" aria-label="Show">
+            <option value="dead">Not working</option>
+            <option value="ok">Working</option>
+            <option value="unknown">Not checked</option>
+            <option value="">All</option>
+          </select>
+          <button class="btn primary" data-act="retry-all">Retry all not working</button>
+        </div>
+        <div class="m-scroll">
+          <table class="m-table s-table">
+            <thead><tr><th>Channel</th><th>Status</th><th>Checked</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="m-view m-users" data-view="users">
+        <label class="check"><input type="checkbox" class="u-open"> Let new people create accounts</label>
+        <div class="m-scroll">
+          <table class="m-table u-table">
+            <thead><tr><th>User</th><th>Role</th><th>Joined</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="m-view m-account" data-view="account">
+        <p class="a-who"></p>
+        <fieldset class="a-mode">
+          <legend>How to watch</legend>
+          <label class="check"><input type="radio" name="a-mode" value="live"> <span><b>Live</b> — as it airs; ads are covered where they can be detected</span></label>
+          <label class="check"><input type="radio" name="a-mode" value="dvr"> <span><b>DVR</b> — start a few minutes behind live and skip ad breaks</span></label>
+          <label class="a-head-row">Head start
+            <select class="a-head"><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option><option value="30">30 minutes</option></select>
+          </label>
+        </fieldset>
+        <label class="check"><input type="checkbox" class="a-ads" checked> Cover ads where they can be detected <small class="m-note">(mutes and hides them on many free channels)</small></label>
+        <div class="m-actions"><button class="btn" data-act="logout">Sign out</button></div>
+      </div>
+
+      <div class="m-view m-import" data-view="import">
+        <p class="m-note">Paste an M3U/M3U8 channel playlist (with <code>#EXTINF</code> lines), pick a file, or load it from a URL. Supports <code>tvg-chno</code>, <code>tvg-logo</code> and <code>group-title</code>.</p>
+        <textarea class="imp-text" rows="10" spellcheck="false" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-chno=&quot;101&quot; tvg-logo=&quot;https://…/logo.png&quot; group-title=&quot;Live&quot;,My Channel&#10;https://…/live/stream.m3u8"></textarea>
+        <div class="field-row">
+          <label>From URL<input class="imp-url" placeholder="https://…/playlist.m3u"></label>
+          <label class="f-file">From file<input class="imp-file" type="file" accept=".m3u,.m3u8,.txt,audio/x-mpegurl,application/vnd.apple.mpegurl"></label>
+        </div>
+        <div class="m-actions end">
+          <label class="check"><input type="checkbox" class="imp-replace"> Replace current lineup</label>
+          <button type="button" class="btn ghost" data-act="cancel">Cancel</button>
+          <button type="button" class="btn" data-act="imp-url">Load URL</button>
+          <button type="button" class="btn primary" data-act="imp-go">Import</button>
+        </div>
+        <div class="imp-msg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Help -->
+  <section id="help" aria-label="Remote keys">
+    <div class="h-panel">
+      <h2>Keys</h2>
+      <dl>
+        <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Channel up / down</dd>
+        <dt><kbd>0</kbd>–<kbd>9</kbd></dt><dd>Go to a channel number <small>(US 1000+, UK 3000+)</small></dd>
+        <dt><kbd>Backspace</kbd></dt><dd>Previous channel</dd>
+        <dt><kbd>/</kbd></dt><dd>Search channels</dd>
+        <dt><kbd>G</kbd></dt><dd>Guide</dd>
+        <dt><kbd>L</kbd></dt><dd>Channels</dd>
+        <dt><kbd>I</kbd></dt><dd>What's on now</dd>
+        <dt><kbd>S</kbd></dt><dd>Add / remove favorite</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Volume</dd>
+        <dt><kbd>C</kbd></dt><dd>Subtitles on / off</dd>
+        <dt><kbd>D</kbd></dt><dd>DVR (skip ads, behind live) / Live</dd>
+        <dt><kbd>Space</kbd></dt><dd>Pause / play (DVR)</dd>
+        <dt><kbd>M</kbd> · <kbd>F</kbd></dt><dd>Mute · Fullscreen</dd>
+        <dt><kbd>E</kbd></dt><dd>Settings &amp; account</dd>
+      </dl>
+      <p class="h-close">Press any key to close</p>
+    </div>
+  </section>
+
+  <!-- Settings shortcut on the TV screen (appears with the controls) -->
+  <div id="corner">
+    <button class="icon-btn" data-cmd="guide" title="Guide (G)" aria-label="Guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M9 10v10"/></svg></button>
+    <button class="icon-btn" data-cmd="manage" title="Settings (E)" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
+  </div>
+
+  <!-- On-screen remote (mouse / touch) -->
+  <div id="remote">
+    <button data-cmd="up" title="Channel up (↑)">CH ▲</button>
+    <button data-cmd="down" title="Channel down (↓)">CH ▼</button>
+    <span class="sep"></span>
+    <button data-cmd="guide" title="Guide (G)">Guide</button>
+    <button data-cmd="list" title="Channels (L)">Channels</button>
+    <span class="sep"></span>
+    <button data-cmd="pause" class="r-pause" title="Pause / play (Space)">❚❚</button>
+    <button data-cmd="dvr" class="r-dvr" title="DVR: watch behind live and skip ads (D)">DVR</button>
+    <button data-cmd="cc" class="r-cc" title="Subtitles (C)">CC</button>
+    <button data-cmd="mute" class="r-mute" title="Mute (M)">🔊</button>
+    <input type="range" class="r-vol" min="0" max="100" step="1" aria-label="Volume">
+    <button data-cmd="fullscreen" title="Fullscreen (F)">⛶</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@1/dist/mpegts.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

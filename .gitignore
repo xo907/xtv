@@ -1,0 +1,13 @@
+# Secrets and per-install data: never commit these.
+# channels.js holds your lineup and can contain provider logins (copy channels.example.js to start).
+channels.js
+# User accounts, sessions and site settings.
+data/
+# Downloaded iptv-org data and stream checks.
+.cache/
+
+# Editor / OS clutter
+.claude/
+node_modules/
+.DS_Store
+Thumbs.db
